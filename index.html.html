@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simulador Contábil: Doce Sabor Confeitaria</title>
+  <style>
+    :root {
+      --primary: #1F497D;
+      --primary-dark: #142f52;
+      --secondary: #2C5E9E;
+      --bg: #F4F6F9;
+      --card-bg: #FFFFFF;
+      --text: #222B45;
+      --text-muted: #6B778C;
+      --border: #DFE1E6;
+      --success: #28a745;
+      --danger: #dc3545;
+      --devedora: #0066CC;
+      --credora: #8A2BE2;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); line-height: 1.5; padding: 20px; }
+
+    header {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      padding: 24px;
+      border-radius: 12px;
+      margin-bottom: 24px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      text-align: center;
+    }
+    header h1 { font-size: 1.8rem; margin-bottom: 6px; }
+    header p { opacity: 0.9; font-size: 0.95rem; }
+
+    .nav-tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .tab-btn {
+      background-color: #E2E8F0;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      color: var(--text);
+      transition: all 0.2s ease;
+    }
+    .tab-btn.active {
+      background-color: var(--primary);
+      color: white;
+      box-shadow: 0 2px 6px rgba(31,73,125,0.3);
+    }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      border: 1px solid var(--border);
+    }
+    .card h2 { font-size: 1.3rem; margin-bottom: 16px; color: var(--primary); }
+
+    /* Plano de Contas */
+    .filter-bar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .filter-bar input, .filter-bar select {
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      font-size: 0.95rem;
+      flex: 1;
+      min-width: 200px;
+    }
+    .table-container { max-height: 480px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; }
+    table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem; }
+    th { background: #EDF2F7; padding: 12px; position: sticky; top: 0; z-index: 1; color: var(--primary); }
+    td { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+    tr:hover { background-color: #F8FAFC; }
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: bold;
+    }
+    .badge-devedora { background: #EBF8FF; color: var(--devedora); border: 1px solid #BEE3F8; }
+    .badge-credora { background: #FAF5FF; color: var(--credora); border: 1px solid #E9D8FD; }
+
+    /* Razonete em T */
+    .t-account-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+    .t-account {
+      background: white;
+      border: 2px solid var(--primary);
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    }
+    .t-title {
+      background: var(--primary);
+      color: white;
+      text-align: center;
+      padding: 8px;
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+    .t-body {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      min-height: 140px;
+    }
+    .t-column { padding: 10px; }
+    .t-left { border-right: 2px solid var(--primary); background: #FAFBFD; }
+    .t-col-header {
+      font-size: 0.75rem;
+      font-weight: 800;
+      color: var(--text-muted);
+      border-bottom: 1px dashed var(--border);
+      padding-bottom: 4px;
+      margin-bottom: 6px;
+      text-align: center;
+    }
+    .t-item { font-size: 0.85rem; padding: 2px 0; display: flex; justify-content: space-between; }
+    .t-footer {
+      border-top: 2px solid var(--primary);
+      padding: 8px 12px;
+      font-weight: bold;
+      font-size: 0.85rem;
+      background: #EDF2F7;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    /* Simulador de Desafio */
+    .quiz-box {
+      border: 1px solid #CBD5E0;
+      padding: 16px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      background: #FCFCFD;
+    }
+    .quiz-box h3 { font-size: 1rem; color: var(--secondary); margin-bottom: 8px; }
+    .select-group { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+    .select-group select { flex: 1; min-width: 240px; padding: 8px; border-radius: 6px; border: 1px solid var(--border); }
+    .btn-check {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      margin-top: 10px;
+    }
+    .btn-check:hover { background: var(--primary-dark); }
+    .quiz-feedback { margin-top: 8px; font-weight: 600; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Doce Sabor Confeitaria — Laboratório Contábil Web</h1>
+    <p>Plano de Contas, Razonetes Dinâmicos e Desafio de Partidas Dobradas</p>
+  </header>
+
+  <div class="nav-tabs">
+    <button class="tab-btn active" onclick="switchTab('tab-plano')">📁 1. Plano de Contas</button>
+    <button class="tab-btn" onclick="switchTab('tab-razonetes')">⚖️ 2. Razonetes em T Dinâmicos</button>
+    <button class="tab-btn" onclick="switchTab('tab-desafio')">🎯 3. Desafio das 5 Operações</button>
+  </div>
+
+  <!-- ABA 1: PLANO DE CONTAS -->
+  <section id="tab-plano" class="tab-content active">
+    <div class="card">
+      <h2>Catálogo de Contas</h2>
+      <div class="filter-bar">
+        <input type="text" id="searchInput" placeholder="Pesquisar por conta ou código..." onkeyup="filterAccounts()">
+        <select id="naturezaFilter" onchange="filterAccounts()">
+          <option value="">Todas as Naturezas</option>
+          <option value="Devedora">Devedora</option>
+          <option value="Credora">Credora</option>
+        </select>
+        <select id="tipoFilter" onchange="filterAccounts()">
+          <option value="">Todos os Tipos</option>
+          <option value="Analítica">Apenas Analíticas (Nível 5)</option>
+          <option value="Sintética">Apenas Sintéticas</option>
+        </select>
+      </div>
+
+      <div class="table-container">
+        <table id="accountsTable">
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Nível</th>
+              <th>Tipo</th>
+              <th>Natureza</th>
+              <th>Descrição da Conta</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ABA 2: RAZONETES EM T -->
+  <section id="tab-razonetes" class="tab-content">
+    <div class="card">
+      <h2>Lançador nos Razonetes em T</h2>
+      <p style="margin-bottom: 15px; color: var(--text-muted); font-size: 0.9rem;">
+        Selecione uma conta analítica, informe o valor e o lado (Débito ou Crédito). O sistema atualiza os saldos devedores ou credores em tempo real.
+      </p>
+
+      <div class="filter-bar">
+        <select id="razoneteSelectConta"></select>
+        <input type="number" id="razoneteValor" placeholder="Valor (R$)" min="0" step="0.01">
+        <select id="razoneteLado">
+          <option value="D">Débito (Esquerda)</option>
+          <option value="C">Crédito (Direita)</option>
+        </select>
+        <button class="btn-check" onclick="addLançamentoRazonete()">Lançar</button>
+      </div>
+
+      <div id="razonetesContainer" class="t-account-grid"></div>
+    </div>
+  </section>
+
+  <!-- ABA 3: DESAFIO DAS 5 OPERAÇÕES -->
+  <section id="tab-desafio" class="tab-content">
+    <div class="card">
+      <h2>Desafio Prático: Identifique Débito e Crédito</h2>
+      <p style="margin-bottom: 15px; color: var(--text-muted); font-size: 0.9rem;">
+        Teste o conhecimento dos alunos selecionando a conta de Débito e a de Crédito para cada uma das operações da doceria.
+      </p>
+      <div id="quizList"></div>
+    </div>
+  </section>
+
+  <script>
+    // 1. BASE DE DADOS DO PLANO DE CONTAS
+    const planoContas = [
+      { code: "1", lvl: 1, type: "Sintética", nat: "Devedora", name: "ATIVO" },
+      { code: "1.1", lvl: 2, type: "Sintética", nat: "Devedora", name: "ATIVO CIRCULANTE" },
+      { code: "1.1.1", lvl: 3, type: "Sintética", nat: "Devedora", name: "Caixa e Equivalentes de Caixa" },
+      { code: "1.1.1.01", lvl: 4, type: "Sintética", nat: "Devedora", name: "Caixa Físico" },
+      { code: "1.1.1.01.001", lvl: 5, type: "Analítica", nat: "Devedora", name: "Gaveta da Loja / Fundo Fixo de Caixa" },
+      { code: "1.1.1.02", lvl: 4, type: "Sintética", nat: "Devedora", name: "Bancos Conta Movimento" },
+      { code: "1.1.1.02.001", lvl: 5, type: "Analítica", nat: "Devedora", name: "Banco Nubank - Conta PJ" },
+      { code: "1.1.1.02.002", lvl: 5, type: "Analítica", nat: "Devedora", name: "Banco Inter - Conta PJ" },
+      { code: "1.1.1.03", lvl: 4, type: "Sintética", nat: "Devedora", name: "Aplicações Financeiras de Liquidez Imediata" },
+      { code: "1.1.1.03.001", lvl: 5, type: "Analítica", nat: "Devedora", name: "CDB Liquidez Diária (Reserva de Emergência)" },
+      { code: "1.1.2", lvl: 3, type: "Sintética", nat: "Devedora", name: "Créditos a Receber" },
+      { code: "1.1.2.01", lvl: 4, type: "Sintética", nat: "Devedora", name: "Cartões de Débito e Crédito a Receber" },
+      { code: "1.1.2.01.001", lvl: 5, type: "Analítica", nat: "Devedora", name: "Operadora de Cartão Stone / PagBank" },
+      { code: "1.1.2.01.002", lvl: 5, type: "Analítica", nat: "Devedora", name: "Recebíveis de Plataformas de Entrega (iFood)" },
+      { code: "1.1.3", lvl: 3, type: "Sintética", nat: "Devedora", name: "Estoques" },
+      { code: "1.1.3.01", lvl: 4, type: "Sintética", nat: "Devedora", name: "Matérias-Primas e Ingredientes" },
+      { code: "1.1.3.01.001", lvl: 5, type: "Analítica", nat: "Devedora", name: "Estoque de Laticínios e Leite Condensado" },
+      { code: "1.1.3.01.002", lvl: 5, type: "Analítica", nat: "Devedora", name: "Estoque de Chocolates e Cacau" },
+      { code: "1.1.3.01.003", lvl: 5, type: "Analítica", nat: "Devedora", name: "Estoque de Farinhas, Açúcares e Fermentos" },
+      { code: "1.1.3.02", lvl: 4, type: "Sintética", nat: "Devedora", name: "Embalagens e Materiais Descartáveis" },
+      { code: "1.1.3.02.001", lvl: 5, type: "Analítica", nat: "Devedora", name: "Caixas para Doces e Forminhas" },
+      { code: "1.1.3.02.002", lvl: 5, type: "Analítica", nat: "Devedora", name: "Sacolas e Fitas de Decoração" },
+      { code: "1.1.3.03", lvl: 4, type: "Sintética", nat: "Devedora", name: "Produtos Acabados" },
+      { code: "1.1.3.03.001", lvl: 5, type: "Analítica", nat: "Devedora", name: "Doces Prontos em Vitrine" },
+      { code: "1.2", lvl: 2, type: "Sintética", nat: "Devedora", name: "ATIVO NÃO CIRCULANTE" },
+      { code: "1.2.1", lvl: 3, type: "Sintética", nat: "Devedora", name: "Imobilizado" },
+      { code: "1.2.1.01", lvl: 4, type: "Sintética", nat: "Devedora", name: "Máquinas e Equipamentos de Produção" },
+      { code: "1.2.1.01.001", lvl: 5, type: "Analítica", nat: "Devedora", name: "Batedeiras Planetárias Industriais" },
+      { code: "1.2.1.01.002", lvl: 5, type: "Analítica", nat: "Devedora", name: "Fornos Elétricos de Convecção" },
+      { code: "1.2.1.01.003", lvl: 5, type: "Analítica", nat: "Devedora", name: "Panela Automática Mexedora de Brigadeiro" },
+      { code: "1.2.1.02", lvl: 4, type: "Sintética", nat: "Devedora", name: "Móveis e Instalações da Loja" },
+      { code: "1.2.1.02.001", lvl: 5, type: "Analítica", nat: "Devedora", name: "Balcão Vitrine Refrigerado" },
+      { code: "1.2.1.02.002", lvl: 5, type: "Analítica", nat: "Devedora", name: "Mesas e Cadeiras do Salão" },
+      { code: "1.2.1.03", lvl: 4, type: "Sintética", nat: "Credora", name: "(-) Depreciação Acumulada" },
+      { code: "1.2.1.03.001", lvl: 5, type: "Analítica", nat: "Credora", name: "(-) Depreciação de Máquinas e Equipamentos" },
+      { code: "2", lvl: 1, type: "Sintética", nat: "Credora", name: "PASSIVO" },
+      { code: "2.1", lvl: 2, type: "Sintética", nat: "Credora", name: "PASSIVO CIRCULANTE" },
+      { code: "2.1.1", lvl: 3, type: "Sintética", nat: "Credora", name: "Obrigações Comerciais" },
+      { code: "2.1.1.01", lvl: 4, type: "Sintética", nat: "Credora", name: "Fornecedores Nacionais" },
+      { code: "2.1.1.01.001", lvl: 5, type: "Analítica", nat: "Credora", name: "Atacadista de Alimentos (Ingredientes)" },
+      { code: "2.1.1.01.002", lvl: 5, type: "Analítica", nat: "Credora", name: "Fábrica de Embalagens" },
+      { code: "2.1.2", lvl: 3, type: "Sintética", nat: "Credora", name: "Obrigações Trabalhistas e Previdenciárias" },
+      { code: "2.1.2.01", lvl: 4, type: "Sintética", nat: "Credora", name: "Folha de Pagamento" },
+      { code: "2.1.2.01.001", lvl: 5, type: "Analítica", nat: "Credora", name: "Salários a Pagar" },
+      { code: "2.1.2.01.002", lvl: 5, type: "Analítica", nat: "Credora", name: "INSS a Recolher" },
+      { code: "2.1.2.01.003", lvl: 5, type: "Analítica", nat: "Credora", name: "FGTS a Recolher" },
+      { code: "2.1.3", lvl: 3, type: "Sintética", nat: "Credora", name: "Obrigações Fiscais e Tributárias" },
+      { code: "2.1.3.01", lvl: 4, type: "Sintética", nat: "Credora", name: "Impostos a Recolher" },
+      { code: "2.1.3.01.001", lvl: 5, type: "Analítica", nat: "Credora", name: "DAS - Simples Nacional a Recolher" },
+      { code: "2.1.4", lvl: 3, type: "Sintética", nat: "Credora", name: "Empréstimos e Financiamentos de Curto Prazo" },
+      { code: "2.1.4.01", lvl: 4, type: "Sintética", nat: "Credora", name: "Empréstimos Bancários" },
+      { code: "2.1.4.01.001", lvl: 5, type: "Analítica", nat: "Credora", name: "Financiamento de Maquinário (Parcelas do Ano)" },
+      { code: "2.2", lvl: 2, type: "Sintética", nat: "Credora", name: "PASSIVO NÃO CIRCULANTE" },
+      { code: "2.2.1", lvl: 3, type: "Sintética", nat: "Credora", name: "Financiamentos Bancários de Longo Prazo" },
+      { code: "2.2.1.01", lvl: 4, type: "Sintética", nat: "Credora", name: "Financiamentos Bancários" },
+      { code: "2.2.1.01.001", lvl: 5, type: "Analítica", nat: "Credora", name: "Pronampe / Crédito Expansão (> 12 meses)" },
+      { code: "3", lvl: 1, type: "Sintética", nat: "Credora", name: "PATRIMÔNIO LÍQUIDO" },
+      { code: "3.1", lvl: 2, type: "Sintética", nat: "Credora", name: "Capital Social" },
+      { code: "3.1.1", lvl: 3, type: "Sintética", nat: "Credora", name: "Capital Subscrito" },
+      { code: "3.1.1.01", lvl: 4, type: "Sintética", nat: "Credora", name: "Capital Integralizado" },
+      { code: "3.1.1.01.001", lvl: 5, type: "Analítica", nat: "Credora", name: "Capital Inicial da Confeitaria" },
+      { code: "3.2", lvl: 2, type: "Sintética", nat: "Credora", name: "Reservas e Resultados Acumulados" },
+      { code: "3.2.1", lvl: 3, type: "Sintética", nat: "Credora", name: "Lucros ou Prejuízos Acumulados" },
+      { code: "3.2.1.01", lvl: 4, type: "Sintética", nat: "Credora", name: "Resultados de Exercícios Anteriores" },
+      { code: "3.2.1.01.001", lvl: 5, type: "Analítica", nat: "Credora", name: "Lucros Retidos para Reinvestimento" },
+      { code: "3.2.1.02", lvl: 4, type: "Sintética", nat: "Credora", name: "Resultado do Período Atual" },
+      { code: "3.2.1.02.001", lvl: 5, type: "Analítica", nat: "Credora", name: "Lucro/Prejuízo do Exercício" },
+      { code: "4", lvl: 1, type: "Sintética", nat: "Credora", name: "RECEITAS" },
+      { code: "4.1", lvl: 2, type: "Sintética", nat: "Credora", name: "RECEITA OPERACIONAL BRUTA" },
+      { code: "4.1.1", lvl: 3, type: "Sintética", nat: "Credora", name: "Venda de Produtos e Mercadorias" },
+      { code: "4.1.1.01", lvl: 4, type: "Sintética", nat: "Credora", name: "Vendas Balcão / Loja Física" },
+      { code: "4.1.1.01.001", lvl: 5, type: "Analítica", nat: "Credora", name: "Receita de Brigadeiros Tradicionais e Gourmet" },
+      { code: "4.1.1.01.002", lvl: 5, type: "Analítica", nat: "Credora", name: "Receita de Bolos Caseiros e Fatias" },
+      { code: "4.1.1.01.003", lvl: 5, type: "Analítica", nat: "Credora", name: "Receita de Cafés e Bebidas" },
+      { code: "4.1.1.02", lvl: 4, type: "Sintética", nat: "Credora", name: "Encomendas e Eventos" },
+      { code: "4.1.1.02.001", lvl: 5, type: "Analítica", nat: "Credora", name: "Receita de Centos de Doces para Festas" },
+      { code: "4.1.1.02.002", lvl: 5, type: "Analítica", nat: "Credora", name: "Receita de Bolos Personalizados" },
+      { code: "4.1.2", lvl: 3, type: "Sintética", nat: "Devedora", name: "Deduções da Receita Bruta" },
+      { code: "4.1.2.01", lvl: 4, type: "Sintética", nat: "Devedora", name: "Impostos Incidentes sobre Vendas" },
+      { code: "4.1.2.01.001", lvl: 5, type: "Analítica", nat: "Devedora", name: "(-) Simples Nacional sobre Vendas" },
+      { code: "4.1.2.02", lvl: 4, type: "Sintética", nat: "Devedora", name: "Descontos e Devoluções" },
+      { code: "4.1.2.02.001", lvl: 5, type: "Analítica", nat: "Devedora", name: "(-) Taxas de Intermediação de Delivery (iFood)" },
+      { code: "4.2", lvl: 2, type: "Sintética", nat: "Credora", name: "OUTRAS RECEITAS (NÃO OPERACIONAIS / FINANCEIRAS)" },
+      { code: "4.2.1", lvl: 3, type: "Sintética", nat: "Credora", name: "Receitas Financeiras" },
+      { code: "4.2.1.01", lvl: 4, type: "Sintética", nat: "Credora", name: "Rendimentos de Aplicações" },
+      { code: "4.2.1.01.001", lvl: 5, type: "Analítica", nat: "Credora", name: "Juros de Aplicações Financeiras" },
+      { code: "4.2.2", lvl: 3, type: "Sintética", nat: "Credora", name: "Outras Receitas Operacionais" },
+      { code: "4.2.2.01", lvl: 4, type: "Sintética", nat: "Credora", name: "Ganhos Diversos" },
+      { code: "4.2.2.01.001", lvl: 5, type: "Analítica", nat: "Credora", name: "Venda de Utensílios Usados" },
+      { code: "5", lvl: 1, type: "Sintética", nat: "Devedora", name: "CUSTOS E DESPESAS" },
+      { code: "5.1", lvl: 2, type: "Sintética", nat: "Devedora", name: "CUSTOS DE PRODUÇÃO (CPV)" },
+      { code: "5.1.1", lvl: 3, type: "Sintética", nat: "Devedora", name: "Matéria-Prima Aplicada" },
+      { code: "5.1.1.01", lvl: 4, type: "Sintética", nat: "Devedora", name: "Ingredientes Diretos Consumidos" },
+      { code: "5.1.1.01.001", lvl: 5, type: "Analítica", nat: "Devedora", name: "Consumo de Leite Condensado e Manteiga" },
+      { code: "5.1.1.01.002", lvl: 5, type: "Analítica", nat: "Devedora", name: "Consumo de Chocolate e Cacau" },
+      { code: "5.1.2", lvl: 3, type: "Sintética", nat: "Devedora", name: "Embalagens Diretas" },
+      { code: "5.1.2.01", lvl: 4, type: "Sintética", nat: "Devedora", name: "Consumo de Embalagens" },
+      { code: "5.1.2.01.001", lvl: 5, type: "Analítica", nat: "Devedora", name: "Forminhas e Caixas Consumidas na Produção" },
+      { code: "5.1.3", lvl: 3, type: "Sintética", nat: "Devedora", name: "Custos Indiretos de Fabricação" },
+      { code: "5.1.3.01", lvl: 4, type: "Sintética", nat: "Devedora", name: "Utilidades da Cozinha" },
+      { code: "5.1.3.01.001", lvl: 5, type: "Analítica", nat: "Devedora", name: "Gás de Cozinha (GLP Industrial)" },
+      { code: "5.1.3.01.002", lvl: 5, type: "Analítica", nat: "Devedora", name: "Energia Elétrica da Cozinha de Produção" },
+      { code: "5.2", lvl: 2, type: "Sintética", nat: "Devedora", name: "DESPESAS OPERACIONAIS" },
+      { code: "5.2.1", lvl: 3, type: "Sintética", nat: "Devedora", name: "Despesas Comerciais e de Vendas" },
+      { code: "5.2.1.01", lvl: 4, type: "Sintética", nat: "Devedora", name: "Marketing e Divulgação" },
+      { code: "5.2.1.01.001", lvl: 5, type: "Analítica", nat: "Devedora", name: "Tráfego Pago / Anúncios em Redes Sociais" },
+      { code: "5.2.1.01.002", lvl: 5, type: "Analítica", nat: "Devedora", name: "Material Promocional e Panfletos" },
+      { code: "5.2.1.02", lvl: 4, type: "Sintética", nat: "Devedora", name: "Despesas com Meios de Pagamento" },
+      { code: "5.2.1.02.001", lvl: 5, type: "Analítica", nat: "Devedora", name: "Taxas de Cartão de Crédito e Débito" },
+      { code: "5.2.2", lvl: 3, type: "Sintética", nat: "Devedora", name: "Despesas Administrativas" },
+      { code: "5.2.2.01", lvl: 4, type: "Sintética", nat: "Devedora", name: "Ocupação e Funcionamento" },
+      { code: "5.2.2.01.001", lvl: 5, type: "Analítica", nat: "Devedora", name: "Aluguel do Ponto Comercial" },
+      { code: "5.2.2.01.002", lvl: 5, type: "Analítica", nat: "Devedora", name: "Água e Internet da Loja" },
+      { code: "5.2.2.02", lvl: 4, type: "Sintética", nat: "Devedora", name: "Serviços de Terceiros" },
+      { code: "5.2.2.02.001", lvl: 5, type: "Analítica", nat: "Devedora", name: "Honorários Contábeis" },
+      { code: "5.2.2.02.002", lvl: 5, type: "Analítica", nat: "Devedora", name: "Software de Ponto de Venda (PDV)" },
+      { code: "5.2.3", lvl: 3, type: "Sintética", nat: "Devedora", name: "Despesas Financeiras" },
+      { code: "5.2.3.01", lvl: 4, type: "Sintética", nat: "Devedora", name: "Juros e Tarifas Bancárias" },
+      { code: "5.2.3.01.001", lvl: 5, type: "Analítica", nat: "Devedora", name: "Tarifas de Manutenção de Conta Bancária" },
+      { code: "5.2.3.01.002", lvl: 5, type: "Analítica", nat: "Devedora", name: "Juros de Financiamento de Equipamentos" }
+    ];
+
+    // 2. CONTROLE DE ABAS
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      event.target.classList.add('active');
+    }
+
+    // 3. RENDERIZAÇÃO DA TABELA DO PLANO DE CONTAS
+    function renderTable(list) {
+      const tbody = document.getElementById('tableBody');
+      tbody.innerHTML = '';
+      list.forEach(c => {
+        const tr = document.createElement('tr');
+        const indent = '&nbsp;'.repeat((c.lvl - 1) * 4);
+        const isBold = c.lvl <= 2 ? 'font-weight: bold;' : '';
+        tr.innerHTML = `
+          <td style="${isBold}">${c.code}</td>
+          <td>${c.lvl}</td>
+          <td>${c.type}</td>
+          <td><span class="badge ${c.nat === 'Devedora' ? 'badge-devedora' : 'badge-credora'}">${c.nat}</span></td>
+          <td style="${isBold}">${indent}${c.name}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function filterAccounts() {
+      const q = document.getElementById('searchInput').value.toLowerCase();
+      const nat = document.getElementById('naturezaFilter').value;
+      const type = document.getElementById('tipoFilter').value;
+
+      const filtered = planoContas.filter(c => {
+        const matchesQ = c.code.toLowerCase().includes(q) || c.name.toLowerCase().includes(q);
+        const matchesNat = !nat || c.nat === nat;
+        const matchesType = !type || c.type === type;
+        return matchesQ && matchesNat && matchesType;
+      });
+      renderTable(filtered);
+    }
+
+    // 4. RAZONETES EM T
+    const razoneteData = {};
+
+    function populateRazoneteSelect() {
+      const sel = document.getElementById('razoneteSelectConta');
+      sel.innerHTML = '<option value="">Selecione uma conta analítica...</option>';
+      planoContas.filter(c => c.type === 'Analítica').forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.code;
+        opt.textContent = `${c.code} - ${c.name}`;
+        sel.appendChild(opt);
+      });
+    }
+
+    function addLançamentoRazonete() {
+      const code = document.getElementById('razoneteSelectConta').value;
+      const val = parseFloat(document.getElementById('razoneteValor').value);
+      const side = document.getElementById('razoneteLado').value;
+
+      if (!code || isNaN(val) || val <= 0) {
+        alert('Selecione uma conta e insira um valor válido maior que zero.');
+        return;
+      }
+
+      if (!razoneteData[code]) {
+        const account = planoContas.find(c => c.code === code);
+        razoneteData[code] = { name: account.name, nat: account.nat, debits: [], credits: [] };
+      }
+
+      if (side === 'D') {
+        razoneteData[code].debits.push(val);
+      } else {
+        razoneteData[code].credits.push(val);
+      }
+
+      document.getElementById('razoneteValor').value = '';
+      renderRazonetes();
+    }
+
+    function renderRazonetes() {
+      const container = document.getElementById('razonetesContainer');
+      container.innerHTML = '';
+
+      for (const [code, acc] of Object.entries(razoneteData)) {
+        const totalD = acc.debits.reduce((a, b) => a + b, 0);
+        const totalC = acc.credits.reduce((a, b) => a + b, 0);
+        
+        let saldoText = '';
+        if (totalD >= totalC) {
+          saldoText = `Saldo Devedor: R$ ${(totalD - totalC).toFixed(2)}`;
+        } else {
+          saldoText = `Saldo Credor: R$ ${(totalC - totalD).toFixed(2)}`;
+        }
+
+        const div = document.createElement('div');
+        div.className = 't-account';
+        div.innerHTML = `
+          <div class="t-title">${code} - ${acc.name}</div>
+          <div class="t-body">
+            <div class="t-column t-left">
+              <div class="t-col-header">DÉBITO (+)</div>
+              ${acc.debits.map(v => `<div class="t-item"><span>R$</span> <span>${v.toFixed(2)}</span></div>`).join('')}
+            </div>
+            <div class="t-column">
+              <div class="t-col-header">CRÉDITO (-)</div>
+              ${acc.credits.map(v => `<div class="t-item"><span>R$</span> <span>${v.toFixed(2)}</span></div>`).join('')}
+            </div>
+          </div>
+          <div class="t-footer">
+            <span>Totais: D: ${totalD.toFixed(2)} | C: ${totalC.toFixed(2)}</span>
+            <span style="color: var(--primary);">${saldoText}</span>
+          </div>
+        `;
+        container.appendChild(div);
+      }
+    }
+
+    // 5. DESAFIO DAS 5 OPERAÇÕES
+    const operationsQuiz = [
+      {
+        id: 1,
+        title: "Operação 1: Compra de Matéria-Prima à Vista (R$ 450,00 via Pix Nubank)",
+        correctDeb: "1.1.3.01.001",
+        correctCred: "1.1.1.02.001",
+        tip: "Entra estoque de ingredientes (Ativo aumenta = D) e sai dinheiro da conta corrente (Ativo diminui = C)."
+      },
+      {
+        id: 2,
+        title: "Operação 2: Venda de Doces à Vista no Balcão (R$ 320,00 recebidos em dinheiro)",
+        correctDeb: "1.1.1.01.001",
+        correctCred: "4.1.1.01.001",
+        tip: "Entra dinheiro na gaveta do caixa (Ativo aumenta = D) e reconhece-se o ganho da venda (Receita = C)."
+      },
+      {
+        id: 3,
+        title: "Operação 3: Compra a Prazo de Embalagens e Forminhas (R$ 600,00 com boleto 30 dias)",
+        correctDeb: "1.1.3.02.001",
+        correctCred: "2.1.1.01.002",
+        tip: "Aumenta o estoque de embalagens (Ativo = D) e surge a obrigação com a fábrica (Passivo aumenta = C)."
+      },
+      {
+        id: 4,
+        title: "Operação 4: Pagamento da Conta de Luz da Cozinha (R$ 280,00 via Banco Inter)",
+        correctDeb: "5.1.3.01.002",
+        correctCred: "1.1.1.02.002",
+        tip: "Registra-se o custo da utilidade da cozinha (Custo = D) e sai recurso do banco (Ativo diminui = C)."
+      },
+      {
+        id: 5,
+        title: "Operação 5: Pagamento de Honorários Contábeis (R$ 500,00 via Pix Nubank)",
+        correctDeb: "5.2.2.02.001",
+        correctCred: "1.1.1.02.001",
+        tip: "Reconhece-se a despesa administrativa (Despesa = D) e o pagamento diminui o saldo bancário (Ativo = C)."
+      }
+    ];
+
+    function renderQuiz() {
+      const container = document.getElementById('quizList');
+      const analyticals = planoContas.filter(c => c.type === 'Analítica');
+
+      operationsQuiz.forEach(op => {
+        const box = document.createElement('div');
+        box.className = 'quiz-box';
+        box.innerHTML = `
+          <h3>${op.title}</h3>
+          <div class="select-group">
+            <div>
+              <label><strong>Conta a DÉBITO (Destino):</strong></label><br>
+              <select id="deb-${op.id}">
+                <option value="">Selecione...</option>
+                ${analyticals.map(c => `<option value="${c.code}">${c.code} -${c.name}</option>`).join('')}
+              </select>
+            </div>
+            <div>
+              <label><strong>Conta a CRÉDITO (Origem):</strong></label><br>
+              <select id="cred-${op.id}">
+                <option value="">Selecione...</option>
+                ${analyticals.map(c => `<option value="${c.code}">${c.code} -${c.name}</option>`).join('')}
+              </select>
+            </div>
+          </div>
+          <button class="btn-check" onclick="checkQuiz(${op.id})">Verificar Lançamento</button>
+          <div class="quiz-feedback" id="feedback-${op.id}"></div>
+        `;
+        container.appendChild(box);
+      });
+    }
+
+    function checkQuiz(opId) {
+      const op = operationsQuiz.find(o => o.id === opId);
+      const userDeb = document.getElementById(`deb-${opId}`).value;
+      const userCred = document.getElementById(`cred-${opId}`).value;
+      const fb = document.getElementById(`feedback-${opId}`);
+
+      if (!userDeb || !userCred) {
+        fb.innerHTML = '<span style="color: orange;">Selecione tanto a conta de Débito quanto a de Crédito.</span>';
+        return;
+      }
+
+      if (userDeb === op.correctDeb && userCred === op.correctCred) {
+        fb.innerHTML = `<span style="color: var(--success);">✓ Correto! ${op.tip}</span>`;
+      } else {
+        fb.innerHTML = `<span style="color: var(--danger);">✗ Incorreto. Dica: ${op.tip}</span>`;
+      }
+    }
+
+    // INICIALIZAÇÃO
+    window.onload = () => {
+      renderTable(planoContas);
+      populateRazoneteSelect();
+      renderQuiz();
+    };
+  </script>
+</body>
+</html>
