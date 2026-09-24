@@ -4,6 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Simulador Contábil: Doce Sabor Confeitaria</title>
+
+  <!-- Integração com Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="app.js"></script>
+
   <style>
     :root {
       --primary: #1F497D;
@@ -31,9 +36,27 @@
       margin-bottom: 24px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.08);
       text-align: center;
+      position: relative;
     }
     header h1 { font-size: 1.8rem; margin-bottom: 6px; }
     header p { opacity: 0.9; font-size: 0.95rem; }
+
+    .btn-admin-header {
+      position: absolute;
+      top: 18px;
+      right: 20px;
+      background: rgba(255, 255, 255, 0.18);
+      color: #ffffff;
+      text-decoration: none;
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      transition: background 0.2s ease;
+    }
+    .btn-admin-header:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
 
     .nav-tabs {
       display: flex;
@@ -170,6 +193,7 @@
       cursor: pointer;
       font-weight: 600;
       margin-top: 10px;
+      transition: background 0.2s ease;
     }
     .btn-check:hover { background: var(--primary-dark); }
     .quiz-feedback { margin-top: 8px; font-weight: 600; font-size: 0.9rem; }
@@ -180,7 +204,19 @@
   <header>
     <h1>Doce Sabor Confeitaria — Laboratório Contábil Web</h1>
     <p>Plano de Contas, Razonetes Dinâmicos e Desafio de Partidas Dobradas</p>
+    <a href="login-admin.html" class="btn-admin-header">🔒 Acesso Professor</a>
   </header>
+
+  <!-- CAMPO DISCRETO DE IDENTIFICAÇÃO DO ESTUDANTE -->
+  <div class="card" style="padding: 14px 20px; margin-bottom: 20px;">
+    <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+      <label for="alunoNomeInput" style="font-weight: 600; color: var(--primary); font-size: 0.95rem;">
+        Identificação do Aluno:
+      </label>
+      <input type="text" id="alunoNomeInput" placeholder="Digite o seu nome completo..." style="flex: 1; min-width: 240px; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.95rem;">
+      <span style="font-size: 0.85rem; color: var(--text-muted);">Lançamentos enviados para avaliação.</span>
+    </div>
+  </div>
 
   <div class="nav-tabs">
     <button class="tab-btn active" onclick="switchTab('tab-plano')">📁 1. Plano de Contas</button>
@@ -504,6 +540,7 @@
       {
         id: 1,
         title: "Operação 1: Compra de Matéria-Prima à Vista (R$ 450,00 via Pix Nubank)",
+        valor: 450.00,
         correctDeb: "1.1.3.01.001",
         correctCred: "1.1.1.02.001",
         tip: "Entra estoque de ingredientes (Ativo aumenta = D) e sai dinheiro da conta corrente (Ativo diminui = C)."
@@ -511,6 +548,7 @@
       {
         id: 2,
         title: "Operação 2: Venda de Doces à Vista no Balcão (R$ 320,00 recebidos em dinheiro)",
+        valor: 320.00,
         correctDeb: "1.1.1.01.001",
         correctCred: "4.1.1.01.001",
         tip: "Entra dinheiro na gaveta do caixa (Ativo aumenta = D) e reconhece-se o ganho da venda (Receita = C)."
@@ -518,6 +556,7 @@
       {
         id: 3,
         title: "Operação 3: Compra a Prazo de Embalagens e Forminhas (R$ 600,00 com boleto 30 dias)",
+        valor: 600.00,
         correctDeb: "1.1.3.02.001",
         correctCred: "2.1.1.01.002",
         tip: "Aumenta o estoque de embalagens (Ativo = D) e surge a obrigação com a fábrica (Passivo aumenta = C)."
@@ -525,6 +564,7 @@
       {
         id: 4,
         title: "Operação 4: Pagamento da Conta de Luz da Cozinha (R$ 280,00 via Banco Inter)",
+        valor: 280.00,
         correctDeb: "5.1.3.01.002",
         correctCred: "1.1.1.02.002",
         tip: "Registra-se o custo da utilidade da cozinha (Custo = D) e sai recurso do banco (Ativo diminui = C)."
@@ -532,6 +572,7 @@
       {
         id: 5,
         title: "Operação 5: Pagamento de Honorários Contábeis (R$ 500,00 via Pix Nubank)",
+        valor: 500.00,
         correctDeb: "5.2.2.02.001",
         correctCred: "1.1.1.02.001",
         tip: "Reconhece-se a despesa administrativa (Despesa = D) e o pagamento diminui o saldo bancário (Ativo = C)."
@@ -570,7 +611,9 @@
       });
     }
 
-    function checkQuiz(opId) {
+    async function checkQuiz(opId) {
+      const nomeInput = document.getElementById('alunoNomeInput');
+      const nomeAluno = (nomeInput ? nomeInput.value : "").trim();
       const op = operationsQuiz.find(o => o.id === opId);
       const userDeb = document.getElementById(`deb-${opId}`).value;
       const userCred = document.getElementById(`cred-${opId}`).value;
@@ -581,10 +624,27 @@
         return;
       }
 
-      if (userDeb === op.correctDeb && userCred === op.correctCred) {
+      const isCorreto = (userDeb === op.correctDeb && userCred === op.correctCred);
+
+      if (isCorreto) {
         fb.innerHTML = `<span style="color: var(--success);">✓ Correto! ${op.tip}</span>`;
       } else {
         fb.innerHTML = `<span style="color: var(--danger);">✗ Incorreto. Dica: ${op.tip}</span>`;
+      }
+
+      // Envio automático para o Supabase (se o estudante tiver preenchido o nome)
+      if (nomeAluno && typeof registrarLancamento === 'function') {
+        try {
+          await registrarLancamento(nomeAluno, `Operação ${op.id}`, {
+            debito: userDeb,
+            credito: userCred,
+            valor: op.valor,
+            acerto: isCorreto
+          });
+          fb.innerHTML += ' <span style="font-size:0.8rem; color:var(--text-muted);">(Registo guardado)</span>';
+        } catch (e) {
+          console.warn("Aviso na gravação remota:", e);
+        }
       }
     }
 
