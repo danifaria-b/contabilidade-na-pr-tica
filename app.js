@@ -4,8 +4,8 @@
 // <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 // ============================================================
 
-const SUPABASE_URL = "COLE_AQUI_A_URL_DO_SEU_PROJETO";
-const SUPABASE_ANON_KEY = "COLE_AQUI_A_ANON_KEY";
+const SUPABASE_URL = "https://jfglrlitaraxrbfnjzde.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_9pq1ZG8pfXFgtiDubL4NLA_jpc4FujT";
 
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
