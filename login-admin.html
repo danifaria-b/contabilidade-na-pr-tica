@@ -6,7 +6,6 @@
 <title>Login do admin — Contabilidade na Prática</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root{--papel:#ECE6D6;--papel-linha:#d9d0b8;--tinta:#22301F;--tinta-suave:#55604f;--verde-razao:#2F4B3C;--vermelho-tinta:#8A2E2E;--borda:#b9ae8c;}
   *{box-sizing:border-box;}
@@ -49,53 +48,17 @@
   </div>
 
   <script>
-    const SUPABASE_URL = "https://jfglrlitaraxrbfnjzde.supabase.co";
-    const SUPABASE_ANON_KEY = "sb_publishable_9pq1ZG8pfXFgtiDubL4NLA_jpc4FujT";
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-    async function loginAdmin(email, senha) {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password: senha });
-      if (error) throw error;
-      return data;
-    }
-
-    async function usuarioAtual() {
-      const { data } = await supabase.auth.getUser();
-      return data.user;
-    }
-
-    async function souAdmin() {
-      const user = await usuarioAtual();
-      if (!user) return false;
-      const { data, error } = await supabase
-        .from("admins")
-        .select("id")
-        .eq("id", user.id)
-        .maybeSingle();
-      if (error) return false;
-      return !!data;
-    }
-
-    async function logoutAdmin() {
-      await supabase.auth.signOut();
-    }
-
-    document.getElementById("form-login").addEventListener("submit", async (e) => {
+    document.getElementById("form-login").addEventListener("submit", (e) => {
       e.preventDefault();
-      const botao = e.target.querySelector("button");
-      botao.disabled = true;
-      try {
-        await loginAdmin(document.getElementById("email").value, document.getElementById("senha").value);
-        if (await souAdmin()) {
-          window.location.href = "admin-simples.html";
-        } else {
-          await logoutAdmin();
-          mostrarAviso("Essa conta existe, mas não tem acesso de administrador.");
-        }
-      } catch (err) {
-        mostrarAviso(err.message.includes("Invalid") ? "E-mail ou senha incorretos." : err.message);
-      } finally {
-        botao.disabled = false;
+      const email = document.getElementById("email").value.trim().toLowerCase();
+      const senha = document.getElementById("senha").value;
+
+      if (email === "daniellafariab@gmail.com" && senha === "admin1234AA") {
+        sessionStorage.setItem("admin_autenticado", "true");
+        sessionStorage.setItem("admin_email", email);
+        window.location.href = "admin-simples.html";
+      } else {
+        mostrarAviso("E-mail ou senha incorretos.");
       }
     });
 
