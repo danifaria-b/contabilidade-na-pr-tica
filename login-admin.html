@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Login do admin — Contabilidade na Prática</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{--papel:#ECE6D6;--papel-linha:#d9d0b8;--tinta:#22301F;--tinta-suave:#55604f;--verde-razao:#2F4B3C;--vermelho-tinta:#8A2E2E;--borda:#b9ae8c;}
+  *{box-sizing:border-box;}
+  body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
+    background:repeating-linear-gradient(var(--papel), var(--papel) 34px, var(--papel-linha) 35px);
+    font-family:'Source Serif 4', serif;color:var(--tinta);padding:24px;}
+  .livro{width:100%;max-width:400px;background:var(--papel);border:1px solid var(--borda);
+    border-left:6px solid var(--verde-razao);padding:36px 32px;box-shadow:4px 4px 0 rgba(34,48,31,0.08);}
+  .rubrica{font-family:'IBM Plex Mono', monospace;font-size:12px;letter-spacing:0.04em;color:var(--tinta-suave);margin:0 0 4px;}
+  h1{font-size:24px;font-weight:600;margin:0 0 24px;}
+  label{font-family:'IBM Plex Mono', monospace;font-size:12px;color:var(--tinta-suave);display:block;margin-bottom:6px;}
+  input{width:100%;font-family:'Source Serif 4', serif;font-size:16px;padding:10px 2px;background:transparent;
+    border:none;border-bottom:1px solid var(--borda);color:var(--tinta);outline:none;}
+  input:focus{border-bottom-color:var(--verde-razao);}
+  form{display:flex;flex-direction:column;gap:16px;}
+  button{margin-top:8px;font-family:'IBM Plex Mono', monospace;font-size:13px;background:var(--verde-razao);
+    color:var(--papel);border:none;padding:13px;cursor:pointer;}
+  button:hover{background:#25382c;}
+  button:disabled{opacity:0.6;cursor:wait;}
+  .aviso{font-family:'IBM Plex Mono', monospace;font-size:12.5px;padding:10px 12px;margin-top:16px;
+    display:none;border-left:3px solid var(--vermelho-tinta);color:var(--vermelho-tinta);background:rgba(138,46,46,0.06);}
+</style>
+</head>
+<body>
+  <div class="livro">
+    <p class="rubrica">CONTABILIDADE NA PRÁTICA</p>
+    <h1>Acesso do administrador</h1>
+    <form id="form-login">
+      <div>
+        <label for="email">E-mail</label>
+        <input id="email" type="email" required autocomplete="email">
+      </div>
+      <div>
+        <label for="senha">Senha</label>
+        <input id="senha" type="password" required autocomplete="current-password">
+      </div>
+      <button type="submit">Entrar</button>
+    </form>
+    <p id="aviso" class="aviso"></p>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    document.getElementById("form-login").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const botao = e.target.querySelector("button");
+      botao.disabled = true;
+      try {
+        await loginAdmin(document.getElementById("email").value, document.getElementById("senha").value);
+        if (await souAdmin()) {
+          window.location.href = "admin.html";
+        } else {
+          await logoutAdmin();
+          mostrarAviso("Essa conta existe, mas não tem acesso de administrador.");
+        }
+      } catch (err) {
+        mostrarAviso(err.message.includes("Invalid") ? "E-mail ou senha incorretos." : err.message);
+      } finally {
+        botao.disabled = false;
+      }
+    });
+    function mostrarAviso(texto){
+      const el = document.getElementById("aviso");
+      el.textContent = texto;
+      el.style.display = "block";
+    }
+  </script>
+</body>
+</html>
