@@ -14,192 +14,132 @@
   header{padding:28px clamp(16px,4vw,48px) 20px;border-bottom:1px solid var(--borda);
     display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:12px;}
   .rubrica{font-family:'IBM Plex Mono', monospace;font-size:12px;letter-spacing:0.04em;color:var(--tinta-suave);margin:0 0 4px;}
-  h1{font-size:24px;font-weight:600;margin:0;}
-  #sair{font-family:'IBM Plex Mono', monospace;font-size:12px;background:none;border:1px solid var(--borda);
-    color:var(--tinta-suave);padding:8px 14px;cursor:pointer;}
-  #sair:hover{border-color:var(--verde-razao);color:var(--verde-razao);}
-  main{padding:24px clamp(16px,4vw,48px) 60px;max-width:1100px;margin:0 auto;}
-  .resumo{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1px;
-    background:var(--borda);border:1px solid var(--borda);margin-bottom:32px;}
-  .cartao{background:var(--papel);padding:18px 20px;}
-  .cartao .numero{font-family:'IBM Plex Mono', monospace;font-size:28px;font-weight:600;color:var(--verde-razao);}
-  .cartao .rotulo{font-family:'IBM Plex Mono', monospace;font-size:11.5px;color:var(--tinta-suave);margin-top:4px;}
-  .abas-secao{display:flex;gap:24px;border-bottom:1px solid var(--borda);margin-bottom:20px;}
-  .aba-secao{font-family:'IBM Plex Mono', monospace;font-size:13px;background:none;border:none;padding:10px 2px;
-    color:var(--tinta-suave);cursor:pointer;border-bottom:2px solid transparent;}
-  .aba-secao.ativa{color:var(--verde-razao);border-color:var(--verde-razao);font-weight:600;}
-  .secao{display:none;} .secao.ativa{display:block;}
-  input#filtro{width:100%;max-width:280px;font-family:'IBM Plex Mono', monospace;font-size:13px;
-    padding:8px 10px;background:transparent;border:1px solid var(--borda);color:var(--tinta);margin-bottom:16px;}
-  table{width:100%;border-collapse:collapse;}
-  thead th{text-align:left;font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.03em;
-    color:var(--tinta-suave);font-weight:600;padding:8px 10px;border-bottom:1px solid var(--borda);}
-  tbody td{padding:12px 10px;border-bottom:1px solid var(--linha);font-size:14.5px;vertical-align:top;}
-  tbody tr:hover{background:rgba(47,75,60,0.04);}
-  .mono{font-family:'IBM Plex Mono', monospace;font-size:12.5px;color:var(--tinta-suave);}
-  .conteudo-json{font-family:'IBM Plex Mono', monospace;font-size:11.5px;color:var(--tinta-suave);white-space:pre-wrap;max-width:360px;}
-  .apagar{font-family:'IBM Plex Mono', monospace;font-size:12px;background:none;border:1px solid var(--vermelho-tinta);
-    color:var(--vermelho-tinta);padding:6px 10px;cursor:pointer;white-space:nowrap;}
-  .apagar:hover{background:var(--vermelho-tinta);color:var(--papel);}
-  .vazio{font-family:'IBM Plex Mono', monospace;font-size:13px;color:var(--tinta-suave);padding:20px 0;}
-  #bloqueio{position:fixed;inset:0;background:var(--papel);display:flex;align-items:center;justify-content:center;
-    font-family:'IBM Plex Mono', monospace;font-size:13px;color:var(--tinta-suave);text-align:center;padding:24px;}
+  h1{font-size:26px;font-weight:600;margin:0;}
+  .acoes-topo{display:flex;gap:12px;align-items:center;}
+  .btn-link{font-family:'IBM Plex Mono', monospace;font-size:13px;background:none;border:none;color:var(--tinta-suave);cursor:pointer;text-decoration:underline;}
+  .btn-link:hover{color:var(--vermelho-tinta);}
+  main{padding:24px clamp(16px,4vw,48px);}
+  .filtro-box{margin-bottom:20px;display:flex;gap:12px;flex-wrap:wrap;}
+  .filtro-box input{font-family:'Source Serif 4', serif;font-size:15px;padding:8px 12px;border:1px solid var(--borda);background:transparent;color:var(--tinta);border-radius:4px;min-width:240px;}
+  table{width:100%;border-collapse:collapse;font-size:14px;background:#fff;border:1px solid var(--borda);border-radius:4px;overflow:hidden;}
+  th, td{padding:12px 14px;border-bottom:1px solid var(--linha);text-align:left;}
+  th{background:#dfd7be;font-family:'IBM Plex Mono', monospace;font-size:12px;color:var(--verde-razao);}
+  tr:hover{background:#faf8f2;}
+  .badge-acerto{display:inline-block;padding:3px 8px;border-radius:4px;background:#e6f4ea;color:#137333;font-weight:600;font-size:12px;}
+  .badge-erro{display:inline-block;padding:3px 8px;border-radius:4px;background:#fce8e6;color:#c5221f;font-weight:600;font-size:12px;}
 </style>
 </head>
 <body>
+  <script>
+    if (sessionStorage.getItem("admin_autenticado") !== "true") {
+      window.location.href = "login-admin.html";
+    }
+  </script>
 
-<div id="bloqueio">Verificando acesso…</div>
-
-<div id="painel" style="display:none;">
   <header>
     <div>
-      <p class="rubrica">CONTABILIDADE NA PRÁTICA</p>
-      <h1>Painel do administrador</h1>
+      <p class="rubrica">PAINEL DE AVALIAÇÃO DOCENTE</p>
+      <h1>Lançamentos dos Estudantes</h1>
     </div>
-    <button id="sair">Sair</button>
+    <div class="acoes-topo">
+      <span style="font-family:'IBM Plex Mono', monospace; font-size:13px;" id="admin-user">daniellafariab@gmail.com</span>
+      <button class="btn-link" onclick="sair()">Encerrar Sessão</button>
+    </div>
   </header>
 
   <main>
-    <div class="resumo">
-      <div class="cartao"><div class="numero" id="total-lancamentos">–</div><div class="rotulo">LANÇAMENTOS</div></div>
-      <div class="cartao"><div class="numero" id="total-alunos">–</div><div class="rotulo">NOMES DIFERENTES</div></div>
-      <div class="cartao"><div class="numero" id="total-acoes">–</div><div class="rotulo">AÇÕES REGISTRADAS</div></div>
+    <div class="filtro-box">
+      <input type="text" id="filtroNome" placeholder="Filtrar por nome do aluno..." onkeyup="filtrar()">
+      <button onclick="carregarLancamentos()" style="font-family:'IBM Plex Mono', monospace; font-size:13px; background:var(--verde-razao); color:#fff; border:none; padding:8px 16px; border-radius:4px; cursor:pointer;">Atualizar Dados</button>
     </div>
 
-    <div class="abas-secao">
-      <button class="aba-secao ativa" data-alvo="secao-lancamentos">Lançamentos</button>
-      <button class="aba-secao" data-alvo="secao-atividade">Registro de atividade</button>
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>Data/Hora</th>
+            <th>Nome do Aluno</th>
+            <th>Exercício</th>
+            <th>Débito</th>
+            <th>Crédito</th>
+            <th>Valor (R$)</th>
+            <th>Resultado</th>
+          </tr>
+        </thead>
+        <tbody id="listaLancamentos">
+          <tr><td colspan="7" style="text-align:center; color:var(--tinta-suave);">A carregar dados...</td></tr>
+        </tbody>
+      </table>
     </div>
-
-    <section id="secao-lancamentos" class="secao ativa">
-      <input id="filtro" type="text" placeholder="Filtrar por nome do aluno...">
-      <table>
-        <thead><tr><th>Aluno</th><th>Exercício</th><th>Lançamento</th><th>Data</th><th></th></tr></thead>
-        <tbody id="corpo-lancamentos"></tbody>
-      </table>
-      <p id="vazio-lancamentos" class="vazio" style="display:none;">Nenhum lançamento ainda.</p>
-    </section>
-
-    <section id="secao-atividade" class="secao">
-      <table>
-        <thead><tr><th>Aluno</th><th>Ação</th><th>Detalhes</th><th>Quando</th></tr></thead>
-        <tbody id="corpo-atividade"></tbody>
-      </table>
-      <p id="vazio-atividade" class="vazio" style="display:none;">Nenhuma atividade registrada ainda.</p>
-    </section>
   </main>
-</div>
 
-<script src="app.js"></script>
-<script>
-  let todosLancamentos = [];
+  <script>
+    const SUPABASE_URL = "https://jfglrlitaraxrbfnjzde.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_9pq1ZG8pfXFgtiDubL4NLA_jpc4FujT";
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  function formatarData(iso){
-    return new Date(iso).toLocaleString("pt-BR", { day:"2-digit", month:"2-digit", year:"numeric", hour:"2-digit", minute:"2-digit" });
-  }
-  function escaparHtml(texto){
-    const div = document.createElement("div");
-    div.textContent = texto;
-    return div.innerHTML;
-  }
+    let registrosGerais = [];
 
-  async function iniciar(){
-    const user = await usuarioAtual();
-    if (!user) { window.location.href = "login-admin.html"; return; }
-    if (!(await souAdmin())) {
-      document.getElementById("bloqueio").textContent = "Esta conta não tem acesso de administrador.";
-      return;
+    async function carregarLancamentos() {
+      const tbody = document.getElementById("listaLancamentos");
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:var(--tinta-suave);">A carregar dados...</td></tr>';
+      
+      const { data, error } = await supabase
+        .from("lancamentos")
+        .select("*")
+        .order("criado_em", { ascending: false });
+
+      if (error) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--vermelho-tinta);">Erro ao carregar dados: ${error.message}</td></tr>`;
+        return;
+      }
+
+      registrosGerais = data || [];
+      renderizarTabela(registrosGerais);
     }
-    document.getElementById("bloqueio").style.display = "none";
-    document.getElementById("painel").style.display = "block";
-    await carregarLancamentos();
-    await carregarAtividade();
-  }
 
-  async function carregarLancamentos(){
-    const { data, error } = await supabase.from("lancamentos").select("*").order("criado_em", { ascending:false });
-    if (error) { console.error(error); return; }
-    todosLancamentos = data;
+    function renderizarTabela(dados) {
+      const tbody = document.getElementById("listaLancamentos");
+      tbody.innerHTML = "";
 
-    document.getElementById("total-lancamentos").textContent = data.length;
-    document.getElementById("total-alunos").textContent = new Set(data.map(l => l.aluno_nome)).size;
+      if (dados.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:var(--tinta-suave);">Nenhum lançamento registado até ao momento.</td></tr>';
+        return;
+      }
 
-    desenharLancamentos(data);
-  }
+      dados.forEach(r => {
+        const tr = document.createElement("tr");
+        const d = new Date(r.criado_em);
+        const dataFmt = d.toLocaleDateString("pt-BR") + " " + d.toLocaleTimeString("pt-BR", {hour:'2-digit', minute:'2-digit'});
+        const c = r.conteudo || {};
+        const correto = (c.acerto !== undefined) ? c.acerto : c.correto;
 
-  function desenharLancamentos(lista){
-    const corpo = document.getElementById("corpo-lancamentos");
-    corpo.innerHTML = "";
-    lista.forEach(l => {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${escaparHtml(l.aluno_nome)}</td>
-        <td class="mono">${escaparHtml(l.exercicio || "—")}</td>
-        <td class="conteudo-json">${escaparHtml(JSON.stringify(l.conteudo, null, 1))}</td>
-        <td class="mono">${formatarData(l.criado_em)}</td>
-        <td><button class="apagar" data-id="${l.id}">Apagar</button></td>`;
-      corpo.appendChild(tr);
-    });
-    document.getElementById("vazio-lancamentos").style.display = lista.length ? "none" : "block";
-    corpo.querySelectorAll(".apagar").forEach(botao => {
-      botao.addEventListener("click", () => apagarLancamento(botao.dataset.id));
-    });
-  }
+        tr.innerHTML = `
+          <td>${dataFmt}</td>
+          <td><strong>${r.aluno_nome || '-'}</strong></td>
+          <td>${r.exercicio || '-'}</td>
+          <td>${c.debito || '-'}</td>
+          <td>${c.credito || '-'}</td>
+          <td>${c.valor ? Number(c.valor).toFixed(2) : '-'}</td>
+          <td>${correto ? '<span class="badge-acerto">Correto</span>' : '<span class="badge-erro">Incorreto</span>'}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
 
-  document.getElementById("filtro").addEventListener("input", (e) => {
-    const termo = e.target.value.trim().toLowerCase();
-    desenharLancamentos(
-      termo ? todosLancamentos.filter(l => l.aluno_nome.toLowerCase().includes(termo)) : todosLancamentos
-    );
-  });
+    function filtrar() {
+      const termo = document.getElementById("filtroNome").value.toLowerCase();
+      const filtrados = registrosGerais.filter(r => (r.aluno_nome || "").toLowerCase().includes(termo));
+      renderizarTabela(filtrados);
+    }
 
-  async function apagarLancamento(id){
-    if (!confirm("Apagar este lançamento? Essa ação não pode ser desfeita.")) return;
-    const lancamento = todosLancamentos.find(l => l.id === id);
-    const { error } = await supabase.from("lancamentos").delete().eq("id", id);
-    if (error) { alert("Erro ao apagar: " + error.message); return; }
-    await supabase.from("activity_log").insert({
-      aluno_nome: lancamento ? lancamento.aluno_nome : null,
-      acao: "lancamento_deletado_admin",
-      detalhes: { lancamento_id: id }
-    });
-    await carregarLancamentos();
-    await carregarAtividade();
-  }
+    function sair() {
+      sessionStorage.removeItem("admin_autenticado");
+      sessionStorage.removeItem("admin_email");
+      window.location.href = "login-admin.html";
+    }
 
-  async function carregarAtividade(){
-    const { data, error } = await supabase.from("activity_log").select("*").order("criado_em", { ascending:false }).limit(200);
-    if (error) { console.error(error); return; }
-    document.getElementById("total-acoes").textContent = data.length;
-    const corpo = document.getElementById("corpo-atividade");
-    corpo.innerHTML = "";
-    data.forEach(a => {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${escaparHtml(a.aluno_nome || "—")}</td>
-        <td class="mono">${a.acao}</td>
-        <td class="conteudo-json">${escaparHtml(JSON.stringify(a.detalhes || {}))}</td>
-        <td class="mono">${formatarData(a.criado_em)}</td>`;
-      corpo.appendChild(tr);
-    });
-    document.getElementById("vazio-atividade").style.display = data.length ? "none" : "block";
-  }
-
-  document.querySelectorAll(".aba-secao").forEach(botao => {
-    botao.addEventListener("click", () => {
-      document.querySelectorAll(".aba-secao").forEach(b => b.classList.remove("ativa"));
-      document.querySelectorAll(".secao").forEach(s => s.classList.remove("ativa"));
-      botao.classList.add("ativa");
-      document.getElementById(botao.dataset.alvo).classList.add("ativa");
-    });
-  });
-
-  document.getElementById("sair").addEventListener("click", async () => {
-    await logoutAdmin();
-    window.location.href = "login-admin.html";
-  });
-
-  iniciar();
-</script>
+    carregarLancamentos();
+  </script>
 </body>
 </html>
